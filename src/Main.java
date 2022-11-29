@@ -2,6 +2,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Main {
@@ -16,21 +17,21 @@ public class Main {
         File file = new File(path, fileName);
         try {
             if (file.createNewFile()) {
-                log.append("File \"" + fileName + "\" created in dir " + path + ".\n");
+                log.append("File \"").append(fileName).append("\" created in dir ").append(path).append(".\n");
             } else {
-                log.append("Error creating the file \"" + fileName + "\" in dir " + path + "!\n");
+                log.append("Error creating the file \"").append(fileName).append("\" in dir ").append(path).append("!\n");
             }
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            log.append(ex.getMessage());
         }
     }
 
     public static void makeDir(String path) {
         File dir = new File(path);
         if (dir.mkdir()) {
-            log.append("Directory " + path + " is create.\n");
+            log.append("Directory ").append(path).append(" is create.\n");
         } else {
-            log.append("Error creating directory: " + path + "\n");
+            log.append("Error creating directory: ").append(path).append("\n");
         }
     }
 
@@ -38,9 +39,9 @@ public class Main {
         try (FileOutputStream fos = new FileOutputStream(path);
              ObjectOutputStream oos = new ObjectOutputStream(fos)) {
             oos.writeObject(save);
-            log.append("Saving was successful in file: " + path + "\n");
+            log.append("Saving was successful in file: ").append(path).append("\n");
         } catch (IOException ex) {
-            log.append(ex.getMessage() + "\n");
+            log.append(ex.getMessage()).append("\n");
         }
         savesList.add(path);
     }
@@ -57,11 +58,33 @@ public class Main {
                 zos.write(Files.readAllBytes(save.toPath()));
                 save.delete();
             }
-            log.append("The archive was created successfully in file: " + path + "\n");
+            log.append("The archive was created successfully in file: ").append(path).append("\n");
             zos.close();
         }
         catch (Exception ex) {
-            log.append(ex.getMessage());
+            log.append(ex.getMessage()).append("\n");
+        }
+    }
+
+    public static void openZip(String pathToArchive, String pathToUnzip) {
+
+        try (ZipInputStream zin = new ZipInputStream(new
+                FileInputStream(pathToArchive))) {
+            ZipEntry entry;
+            String name;
+            while ((entry = zin.getNextEntry()) != null) {
+                name = entry.getName();
+                FileOutputStream fout = new FileOutputStream(PATH_TO_SAVE + name);
+                for (int c = zin.read(); c != -1; c = zin.read()) {
+                    fout.write(c);
+                }
+                fout.flush();
+                zin.closeEntry();
+                fout.close();
+            }
+            log.append("The archive ").append(pathToArchive).append(" has been unpacked correct.\n");
+        } catch (Exception ex) {
+            log.append(ex.getMessage()).append("\n");
         }
     }
 
@@ -104,6 +127,8 @@ public class Main {
         saveGames(PATH_TO_SAVE + "save3.dat", save3);
 
         zipFiles(PATH_TO_SAVE + "saves.zip", savesList);
+
+        openZip(PATH_TO_SAVE + "saves.zip", PATH_TO_SAVE);
 
         writeLogInFile();
     }
