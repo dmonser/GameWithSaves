@@ -9,8 +9,8 @@ public class Main {
 
     public static StringBuilder log = new StringBuilder();
     public static ArrayList<String> savesList = new ArrayList<>();
-    public static final String PARANT_DIR = "/home/rnosov/JavaGame/";
-    public static final String PATH_TO_SAVE = PARANT_DIR + "savegames/";
+    public static final String PARENT_DIR = "/home/user/JavaGame/";
+    public static final String PATH_TO_SAVE = PARENT_DIR + "savegames/";
 
 
     public static void touch(String path, String fileName) throws IOException {
@@ -18,8 +18,6 @@ public class Main {
         try {
             if (file.createNewFile()) {
                 log.append("File \"").append(fileName).append("\" created in dir ").append(path).append(".\n");
-            } else {
-                log.append("Error creating the file \"").append(fileName).append("\" in dir ").append(path).append("!\n");
             }
         } catch (IOException ex) {
             log.append(ex.getMessage());
@@ -60,8 +58,7 @@ public class Main {
             }
             log.append("The archive was created successfully in file: ").append(path).append("\n");
             zos.close();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             log.append(ex.getMessage()).append("\n");
         }
     }
@@ -88,11 +85,23 @@ public class Main {
         }
     }
 
+    public static GameProgress openProgress(String path) throws IOException, ClassNotFoundException {
+        GameProgress gameProgress = null;
+        try (FileInputStream fis = new FileInputStream(path);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            gameProgress = (GameProgress) ois.readObject();
+        } catch (IOException | ClassNotFoundException ex) {
+            log.append(ex.getMessage()).append("\n");
+        }
+        log.append("Save is correct deserialization from file: ").append(path).append("\n");
+        return gameProgress;
+    }
+
     public static void writeLogInFile() {
         String outPut = log.toString();
         byte[] buffer = outPut.getBytes();
 
-        try (FileOutputStream out = new FileOutputStream(PARANT_DIR + "temp/temp.txt");
+        try (FileOutputStream out = new FileOutputStream(PARENT_DIR + "temp/temp.txt");
              BufferedOutputStream bos = new BufferedOutputStream(out)) {
             bos.write(buffer, 0, buffer.length);
         } catch (IOException ex) {
@@ -100,23 +109,23 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        makeDir(PARANT_DIR + "src");
-        makeDir(PARANT_DIR + "res");
-        makeDir(PARANT_DIR + "savegames");
-        makeDir(PARANT_DIR + "temp"); //1.
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        makeDir(PARENT_DIR + "src");
+        makeDir(PARENT_DIR + "res");
+        makeDir(PARENT_DIR + "savegames");
+        makeDir(PARENT_DIR + "temp"); //1.
 
-        makeDir(PARANT_DIR + "src/main");
-        makeDir(PARANT_DIR + "src/test"); //2.
+        makeDir(PARENT_DIR + "src/main");
+        makeDir(PARENT_DIR + "src/test"); //2.
 
-        touch(PARANT_DIR + "src/main", "Main.java");
-        touch(PARANT_DIR + "src/main", "Utils.java"); //3.
+        touch(PARENT_DIR + "src/main", "Main.java");
+        touch(PARENT_DIR + "src/main", "Utils.java"); //3.
 
-        makeDir(PARANT_DIR + "res/drawables");
-        makeDir(PARANT_DIR + "res/vectors");
-        makeDir(PARANT_DIR + "res/icons"); //4.
+        makeDir(PARENT_DIR + "res/drawables");
+        makeDir(PARENT_DIR + "res/vectors");
+        makeDir(PARENT_DIR + "res/icons"); //4.
 
-        touch(PARANT_DIR + "temp", "temp.txt"); //5
+        touch(PARENT_DIR + "temp", "temp.txt"); //5
 
         GameProgress save1 = new GameProgress(98, 2, 4, 115);
         GameProgress save2 = new GameProgress(112, 4, 8, 196);
@@ -129,6 +138,9 @@ public class Main {
         zipFiles(PATH_TO_SAVE + "saves.zip", savesList);
 
         openZip(PATH_TO_SAVE + "saves.zip", PATH_TO_SAVE);
+
+        GameProgress gameProgress = openProgress(PATH_TO_SAVE + "save2.dat");
+        System.out.println(gameProgress);
 
         writeLogInFile();
     }
