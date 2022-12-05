@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -9,7 +10,7 @@ public class Main {
 
     public static StringBuilder log = new StringBuilder();
     public static ArrayList<String> savesList = new ArrayList<>();
-    public static final String PARENT_DIR = "/home/user/JavaGame/";
+    public static final String PARENT_DIR = "/home/rnosov/JavaGame/";
     public static final String PATH_TO_SAVE = PARENT_DIR + "savegames/";
 
 
@@ -49,12 +50,11 @@ public class Main {
         try {
             FileOutputStream fos = new FileOutputStream(path);
             ZipOutputStream zos = new ZipOutputStream(fos);
-            for (int i = 0; i < counter; i++) {
-                File save = new File(list.get(i));
+            for (String s : list) {
+                File save = new File(s);
                 ZipEntry zipEntry = new ZipEntry(save.getName()); //save.getName()???
                 zos.putNextEntry(zipEntry);
                 zos.write(Files.readAllBytes(save.toPath()));
-                save.delete();
             }
             log.append("The archive was created successfully in file: ").append(path).append("\n");
             zos.close();
@@ -109,6 +109,22 @@ public class Main {
         }
     }
 
+    public static void deleteFiles(String path, String typeOfFileToDelete) {
+        File dir = new File(path);
+        if (dir.isDirectory()) {
+            for (File item : Objects.requireNonNull(dir.listFiles())) {
+                if (item.isFile()) {
+                    String fileName = item.getName();
+                    String[] fileType = fileName.split("\\.");
+                    if (fileType[1].equals(typeOfFileToDelete)) {
+                        item.delete();
+                        log.append("File \"").append(item.getName()).append("\" is deleted\n");
+                    }
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         makeDir(PARENT_DIR + "src");
         makeDir(PARENT_DIR + "res");
@@ -136,6 +152,8 @@ public class Main {
         saveGames(PATH_TO_SAVE + "save3.dat", save3);
 
         zipFiles(PATH_TO_SAVE + "saves.zip", savesList);
+
+        deleteFiles(PATH_TO_SAVE, "dat");
 
         openZip(PATH_TO_SAVE + "saves.zip", PATH_TO_SAVE);
 
